@@ -387,7 +387,7 @@ class FirebaseChatCore {
   /// room ID. Message will probably be taken from the [messages] stream.
   void updateMessage(types.Message message, String roomId) async {
     if (firebaseUser == null) return;
-    if (message.author.id != firebaseUser!.email ?? '') return;
+    if (message.author.id != firebaseUser!.email) return;
 
     final messageMap = message.toJson();
     messageMap.removeWhere(
@@ -451,7 +451,7 @@ class FirebaseChatCore {
           (snapshot) => snapshot.docs.fold<List<types.User>>(
             [],
             (previousValue, doc) {
-              if (firebaseUser!.email ?? '' == doc.id) return previousValue;
+              if (firebaseUser!.email == doc.id) return previousValue;
 
               final data = doc.data();
 

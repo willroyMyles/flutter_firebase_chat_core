@@ -59,7 +59,7 @@ class FirebaseChatCore {
 
     final currentUser = await fetchUser(
       getFirebaseFirestore(),
-      firebaseUser!.uid,
+      firebaseUser!.email,
       config.usersCollectionName,
       role: creatorRole.toShortString(),
     );
@@ -107,7 +107,7 @@ class FirebaseChatCore {
 
     // Sort two user ids array to always have the same array for both users,
     // this will make it easy to find the room if exist and make one read only.
-    final userIds = [fu.uid, otherUser.id]..sort();
+    final userIds = [fu.email, otherUser.id]..sort();
 
     final roomQuery = await getFirebaseFirestore()
         .collection(config.roomsCollectionName)
@@ -153,7 +153,7 @@ class FirebaseChatCore {
 
     final currentUser = await fetchUser(
       getFirebaseFirestore(),
-      fu.uid,
+      fu.email,
       config.usersCollectionName,
     );
 
@@ -315,11 +315,11 @@ class FirebaseChatCore {
     final collection = orderByUpdatedAt
         ? getFirebaseFirestore()
             .collection(config.roomsCollectionName)
-            .where('userIds', arrayContains: fu.uid)
+            .where('userIds', arrayContains: fu.email)
             .orderBy('updatedAt', descending: true)
         : getFirebaseFirestore()
             .collection(config.roomsCollectionName)
-            .where('userIds', arrayContains: fu.uid);
+            .where('userIds', arrayContains: fu.email);
 
     return collection.snapshots().asyncMap(
           (query) => processRoomsQuery(
@@ -341,25 +341,25 @@ class FirebaseChatCore {
 
     if (partialMessage is types.PartialCustom) {
       message = types.CustomMessage.fromPartial(
-        author: types.User(id: firebaseUser!.uid),
+        author: types.User(id: firebaseUser!.email),
         id: '',
         partialCustom: partialMessage,
       );
     } else if (partialMessage is types.PartialFile) {
       message = types.FileMessage.fromPartial(
-        author: types.User(id: firebaseUser!.uid),
+        author: types.User(id: firebaseUser!.email),
         id: '',
         partialFile: partialMessage,
       );
     } else if (partialMessage is types.PartialImage) {
       message = types.ImageMessage.fromPartial(
-        author: types.User(id: firebaseUser!.uid),
+        author: types.User(id: firebaseUser!.email),
         id: '',
         partialImage: partialMessage,
       );
     } else if (partialMessage is types.PartialText) {
       message = types.TextMessage.fromPartial(
-        author: types.User(id: firebaseUser!.uid),
+        author: types.User(id: firebaseUser!.email),
         id: '',
         partialText: partialMessage,
       );
@@ -368,7 +368,7 @@ class FirebaseChatCore {
     if (message != null) {
       final messageMap = message.toJson();
       messageMap.removeWhere((key, value) => key == 'author' || key == 'id');
-      messageMap['authorId'] = firebaseUser!.uid;
+      messageMap['authorId'] = firebaseUser!.email;
       messageMap['createdAt'] = FieldValue.serverTimestamp();
       messageMap['updatedAt'] = FieldValue.serverTimestamp();
 
@@ -387,7 +387,7 @@ class FirebaseChatCore {
   /// room ID. Message will probably be taken from the [messages] stream.
   void updateMessage(types.Message message, String roomId) async {
     if (firebaseUser == null) return;
-    if (message.author.id != firebaseUser!.uid) return;
+    if (message.author.id != firebaseUser!.email) return;
 
     final messageMap = message.toJson();
     messageMap.removeWhere(
@@ -451,7 +451,7 @@ class FirebaseChatCore {
           (snapshot) => snapshot.docs.fold<List<types.User>>(
             [],
             (previousValue, doc) {
-              if (firebaseUser!.uid == doc.id) return previousValue;
+              if (firebaseUser!.email == doc.id) return previousValue;
 
               final data = doc.data();
 
